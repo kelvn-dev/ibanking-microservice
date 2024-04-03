@@ -1,6 +1,7 @@
 package com.ibanking.apigateway.config;
 
 import com.ibanking.apigateway.component.RelayGatewayFilterFactory;
+import com.ibanking.apigateway.config.properties.PaymentMsPropConfig;
 import com.ibanking.apigateway.config.properties.UserMsPropConfig;
 import java.util.Arrays;
 import java.util.function.Function;
@@ -22,12 +23,15 @@ public class GatewayConfig {
 
   private final RelayGatewayFilterFactory relayGatewayFilterFactory;
   private final UserMsPropConfig userMsPropConfig;
+  private final PaymentMsPropConfig paymentMsPropConfig;
 
   @Bean
   public RouteLocator gatewayRoutes(RouteLocatorBuilder routeLocatorBuilder) {
     RouteLocatorBuilder.Builder routesBuilder = routeLocatorBuilder.routes();
     Arrays.stream(userMsPropConfig.getPaths())
         .forEach(path -> routesBuilder.route(getRoute(path, userMsPropConfig.getName())));
+    Arrays.stream(paymentMsPropConfig.getPaths())
+        .forEach(path -> routesBuilder.route(getRoute(path, paymentMsPropConfig.getName())));
     return routesBuilder.build();
   }
 

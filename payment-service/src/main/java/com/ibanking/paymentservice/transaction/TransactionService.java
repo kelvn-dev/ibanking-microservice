@@ -108,8 +108,8 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
 
     long now = Instant.now().getEpochSecond();
     if (transaction.getOtpExpiryTime() < now) {
-//      transaction.setStatus(TransactionStatus.EXPIRED);
-//      repository.saveAndFlush(transaction);
+      //      transaction.setStatus(TransactionStatus.EXPIRED);
+      //      repository.saveAndFlush(transaction);
       throw new ForbiddenException("OTP has expired");
     }
 

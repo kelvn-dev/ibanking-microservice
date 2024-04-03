@@ -1,0 +1,74 @@
+version: "3.8"
+name: "ibanking-microservice"
+services:
+  db:
+    container_name: ibanking-microservice-postgresql
+    image: postgres:14.1-alpine
+    environment:
+      POSTGRES_USER: ibanking
+      POSTGRES_PASSWORD: ibanking
+      POSTGRES_DB: ibanking
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/db:/var/lib/postgresql/data
+    networks:
+      - ibanking-microservice
+  registry-service:
+    container_name: "ibanking-registry-service"
+    image: kelvn/ibanking-registry-service:latest
+    ports:
+      - "8761:8761"
+    networks:
+      - ibanking-microservice
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/"]
+      interval: 4s
+      timeout: 2s
+      retries: 3
+#  config-service:
+#    container_name: "ibanking-config-service"
+#    image: kelvn/ibanking-config-service:latest
+#    ports:
+#      - "8762:8762"
+#    networks:
+#      - ibanking-microservice
+  user-service:
+    container_name: "ibanking-user-service"
+    image: kelvn/ibanking-user-service:latest
+    ports:
+      - "8080"
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - ibanking-microservice
+  payment-service:
+    container_name: "ibanking-payment-service"
+    image: kelvn/ibanking-payment-service:latest
+    ports:
+      - "8080"
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - ibanking-microservice
+  api-gateway:
+    container_name: "ibanking-api-gateway"
+    image: kelvn/ibanking-api-gateway:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      registry-service:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - ibanking-microservice
+networks:
+  ibanking-microservice:
+    driver: bridge

@@ -9,7 +9,6 @@
     <module>registry-service</module>
     <module>api-gateway</module>
     <module>user-service</module>
-    <module>student-service</module>
     <module>payment-service</module>
   </modules>
   <properties>
