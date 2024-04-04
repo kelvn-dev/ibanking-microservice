@@ -91,7 +91,6 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
 
   @Transactional
   public Transaction complete(String userId, UUID transactionId, TransactionCompleteDto dto) {
-    UserResDto user = userServiceClient.getProfile(userId);
     Transaction transaction = this.getByIdForUpdate(transactionId);
 
     if (!transaction.getUserId().equals(userId)) {

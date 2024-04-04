@@ -60,12 +60,17 @@ public class SendgridService {
     send(mail);
   }
 
-  public void sendWithoutTemplate(String emailTo, String body) {
+  public void sendWithoutTemplate(String emailTo, String subject, String body) {
     Email receiver = new Email(emailTo);
     Content content = new Content("text/html", body);
-    Mail mail = new Mail(sender, "success tuition fee", receiver, content);
+    Mail mail = new Mail(sender, subject, receiver, content);
     mail.setReplyTo(sender);
     send(mail);
+  }
+
+  public void sendReceipt(String emailTo, String body) {
+    String subject = "Successful tuition payment";
+    sendWithoutTemplate(emailTo, subject, body);
   }
 
   public void sendOtpVerification(UserResDto user, int otpCode) {
