@@ -7,13 +7,11 @@ import com.ibanking.paymentservice.stripe.customer.CustomerService;
 import com.ibanking.paymentservice.tuition.Tuition;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
-import com.stripe.param.PaymentIntentCreateParams;
-import com.stripe.param.PaymentMethodListParams;
+import com.stripe.param.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.List;
 import java.util.Objects;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
@@ -36,19 +34,6 @@ public class PaymentService extends StripeService {
   @SneakyThrows(StripeException.class)
   public void createPaymentIntent(String customerId, Tuition tuition) {
     Customer customer = customerService.retrieve(customerId);
-    PaymentMethodListParams paymentMethodListParams =
-        PaymentMethodListParams.builder()
-            .setCustomer(customerId)
-            .setType(PaymentMethodListParams.Type.CARD)
-            .build();
-
-    PaymentMethodCollection paymentMethodCollection =
-        PaymentMethod.list(paymentMethodListParams, requestOptions);
-    List<PaymentMethod> paymentMethods = paymentMethodCollection.getData();
-    if (paymentMethods.isEmpty()) {
-      throw new RuntimeException("Invalid payment method");
-    }
-    String paymentMethod = paymentMethods.get(0).getId();
     String description =
         String.format(
             "%s semester/%s - %s",
@@ -62,7 +47,7 @@ public class PaymentService extends StripeService {
             .setCurrency("usd")
             .setAmount((long) tuition.getCharges() * 100)
             .setCustomer(customerId)
-            .setPaymentMethod(paymentMethod)
+            .setPaymentMethod("pm_card_visa")
             .setConfirm(true)
             .setOffSession(true)
             .build();
