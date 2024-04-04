@@ -32,6 +32,9 @@ public class User {
   @Column(name = "phone")
   private String phone;
 
+  @Column(name = "stripe_customer")
+  private String stripeCustomer;
+
   @Column(name = "created_at", updatable = false)
   private long createdAt;
 
