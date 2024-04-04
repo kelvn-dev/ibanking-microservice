@@ -1,0 +1,4 @@
+# Ignore all files in the root directory
+*
+# Exclude the target directory and its contents except for *.jar
+!target/*.jar
