@@ -51,8 +51,8 @@ public class UserService {
   }
 
   private long getRandomBalance() {
-    long leftLimit = 10_000_000L;
-    long rightLimit = 100_000_000L;
+    long leftLimit = 100_000L;
+    long rightLimit = 1_000_000L;
     return leftLimit + (long) (Math.random() * (rightLimit - leftLimit));
   }
 
