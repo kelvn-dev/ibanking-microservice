@@ -7,9 +7,13 @@ import com.ibanking.paymentservice.exception.BadRequestException;
 import com.ibanking.paymentservice.exception.ForbiddenException;
 import com.ibanking.paymentservice.exception.NotFoundException;
 import com.ibanking.paymentservice.sendgrid.SendgridService;
+import com.ibanking.paymentservice.stripe.customer.CustomerService;
+import com.ibanking.paymentservice.stripe.payment.PaymentService;
 import com.ibanking.paymentservice.tuition.Tuition;
 import com.ibanking.paymentservice.tuition.TuitionRepository;
 import com.ibanking.paymentservice.tuition.TuitionService;
+import com.stripe.model.Customer;
+import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +29,8 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
   private final UserServiceClient userServiceClient;
   private final SendgridService sendgridService;
   private final OtpService otpService;
+  private final CustomerService customerService;
+  private final PaymentService paymentService;
   private final long otpTTL;
 
   public TransactionService(
@@ -33,6 +39,8 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
       TuitionRepository tuitionRepository,
       UserServiceClient userServiceClient,
       SendgridService sendgridService,
+      CustomerService customerService,
+      PaymentService paymentService,
       OtpService otpService) {
     super(repository);
     this.tuitionService = tuitionService;
@@ -40,6 +48,8 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
     this.userServiceClient = userServiceClient;
     this.sendgridService = sendgridService;
     this.otpService = otpService;
+    this.customerService = customerService;
+    this.paymentService = paymentService;
     this.otpTTL = 300;
   }
 
@@ -54,13 +64,16 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
   @Transactional
   public Transaction create(String userId, TransactionReqDto dto) {
     UUID tuitionId = dto.getTuitionId();
-    UserResDto user = userServiceClient.getProfile(userId);
+    UserResDto user = userServiceClient.getUser(userId);
     Tuition tuition = tuitionService.getById(tuitionId, false);
     if (tuition.isPaid()) {
       throw new BadRequestException("Tuition has been paid");
     }
-    //    if user.balances < tuition.charges:
-    //    raise HTTPException(status_code=400, detail="Insufficient balances")
+
+    Customer customer = customerService.retrieve(user.getStripeCustomer());
+    if (customer.getBalance() < tuition.getCharges()) {
+      throw new BadRequestException("Insufficient balances");
+    }
 
     // Iterates through transactions with same tuitionId, userId and return if not expires
     long now = Instant.now().getEpochSecond();
@@ -102,8 +115,11 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
       throw new BadRequestException("Tuition has been paid");
     }
 
-    //    if user.balances < tuition.charges:
-    //    raise HTTPException(status_code=400, detail="Insufficient balances")
+    UserResDto user = userServiceClient.getUser(userId);
+    Customer customer = customerService.retrieve(user.getStripeCustomer());
+    if (customer.getBalance() < tuition.getCharges()) {
+      throw new BadRequestException("Insufficient balances");
+    }
 
     long now = Instant.now().getEpochSecond();
     if (transaction.getOtpExpiryTime() < now) {
@@ -122,6 +138,9 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
     repository.saveAndFlush(transaction);
 
     // stripe
+    PaymentIntent paymentIntent = paymentService.createPaymentIntent(customer, tuition);
+    customerService.decreaseBalance(customer, (long) tuition.getCharges());
+    paymentService.sendReceipt(customer, paymentIntent);
 
     return transaction;
   }

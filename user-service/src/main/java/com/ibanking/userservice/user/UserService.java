@@ -45,7 +45,7 @@ public class UserService {
 
   private String createStripeCustomer(User user) {
     CustomerReqDto dto = userMapper.model2StripeCustomerReq(user);
-    dto.setBalance(getRandomBalance());
+    dto.setBalance(getRandomBalance() * 100);
     CustomerResDto customer = stripeServiceClient.createStripeCustomer(dto);
     return customer.getId();
   }

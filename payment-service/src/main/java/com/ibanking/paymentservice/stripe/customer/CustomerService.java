@@ -32,9 +32,16 @@ public class CustomerService extends StripeService {
 
   @SneakyThrows(StripeException.class)
   public Customer update(String id, CustomerReqDto dto) {
-    Customer customer = Customer.retrieve(id);
+    Customer customer = this.retrieve(id);
     CustomerUpdateParams params =
         CustomerUpdateParams.builder().setName(dto.getName()).setPhone(dto.getPhone()).build();
-    return customer.update(params);
+    return customer.update(params, requestOptions);
+  }
+
+  @SneakyThrows(StripeException.class)
+  public Customer decreaseBalance(Customer customer, long amount) {
+    CustomerUpdateParams params =
+        CustomerUpdateParams.builder().setBalance(customer.getBalance() - amount).build();
+    return customer.update(params, requestOptions);
   }
 }

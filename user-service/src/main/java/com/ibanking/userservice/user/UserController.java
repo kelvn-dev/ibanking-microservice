@@ -25,6 +25,13 @@ public class UserController {
     return ResponseEntity.ok(dto);
   }
 
+  @GetMapping
+  public ResponseEntity<?> getUser(@RequestHeader("x-user-id") String userId) {
+    User user = userService.getById(userId, false);
+    UserResDto dto = userMapper.model2Dto(user);
+    return ResponseEntity.ok(dto);
+  }
+
   @PutMapping("/profile")
   public ResponseEntity<?> updateProfile(
       @RequestHeader("x-user-id") String userId, @Valid @RequestBody UserReqDto dto) {

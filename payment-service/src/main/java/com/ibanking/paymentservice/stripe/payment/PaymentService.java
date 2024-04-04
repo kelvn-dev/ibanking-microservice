@@ -3,7 +3,6 @@ package com.ibanking.paymentservice.stripe.payment;
 import com.ibanking.paymentservice.sendgrid.SendgridService;
 import com.ibanking.paymentservice.stripe.StripePropConfig;
 import com.ibanking.paymentservice.stripe.StripeService;
-import com.ibanking.paymentservice.stripe.customer.CustomerService;
 import com.ibanking.paymentservice.tuition.Tuition;
 import com.stripe.exception.StripeException;
 import com.stripe.model.*;
@@ -12,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
@@ -20,20 +20,14 @@ import org.springframework.stereotype.Service;
 public class PaymentService extends StripeService {
 
   private final SendgridService sendgridService;
-  private final CustomerService customerService;
 
-  public PaymentService(
-      StripePropConfig stripePropConfig,
-      SendgridService sendgridService,
-      CustomerService customerService) {
+  public PaymentService(StripePropConfig stripePropConfig, SendgridService sendgridService) {
     super(stripePropConfig);
     this.sendgridService = sendgridService;
-    this.customerService = customerService;
   }
 
   @SneakyThrows(StripeException.class)
-  public void createPaymentIntent(String customerId, Tuition tuition) {
-    Customer customer = customerService.retrieve(customerId);
+  public PaymentIntent createPaymentIntent(Customer customer, Tuition tuition) {
     String description =
         String.format(
             "%s semester/%s - %s",
@@ -46,14 +40,13 @@ public class PaymentService extends StripeService {
             .setDescription(description)
             .setCurrency("usd")
             .setAmount((long) tuition.getCharges() * 100)
-            .setCustomer(customerId)
+            .setCustomer(customer.getId())
             .setPaymentMethod("pm_card_visa")
             .setConfirm(true)
             .setOffSession(true)
             .build();
 
-    PaymentIntent paymentIntent = PaymentIntent.create(paymentIntentCreateParams);
-    sendReceipt(customer, paymentIntent);
+    return PaymentIntent.create(paymentIntentCreateParams, requestOptions);
   }
 
   @SneakyThrows({StripeException.class, IOException.class})
@@ -76,7 +69,7 @@ public class PaymentService extends StripeService {
         result.write(buffer, 0, length);
       }
     }
-    String body = result.toString("UTF-8");
+    String body = result.toString(StandardCharsets.UTF_8);
     sendgridService.sendReceipt(customer.getEmail(), body);
   }
 }
