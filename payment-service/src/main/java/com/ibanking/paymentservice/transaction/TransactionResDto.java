@@ -1,5 +1,6 @@
 package com.ibanking.paymentservice.transaction;
 
+import com.ibanking.paymentservice.tuition.TuitionResDto;
 import java.util.UUID;
 import lombok.Data;
 
@@ -9,4 +10,5 @@ public class TransactionResDto {
   private UUID tuitionId;
   private String userId;
   private TransactionStatus status;
+  private TuitionResDto tuition;
 }

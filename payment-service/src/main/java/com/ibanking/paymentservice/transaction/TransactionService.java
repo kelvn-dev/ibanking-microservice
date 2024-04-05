@@ -77,7 +77,8 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
 
     // Iterates through transactions with same tuitionId, userId and return if not expires
     long now = Instant.now().getEpochSecond();
-    List<Transaction> transactions = repository.findAllByTuitionIdAndUserId(tuitionId, userId);
+    List<Transaction> transactions =
+        (List<Transaction>) repository.findAllByTuitionIdAndUserId(tuitionId, userId);
     for (Transaction transaction : transactions) {
       if (transaction.getOtpExpiryTime() > now) {
         return transaction;
@@ -143,5 +144,11 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
     paymentService.sendReceipt(customer, paymentIntent);
 
     return transaction;
+  }
+
+  public List<Transaction> getList(String userId, TransactionStatus status) {
+    TransactionEntityGraph entityGraph =
+        TransactionEntityGraph.____().tuition().student().____.____();
+    return (List<Transaction>) repository.findAllByUserIdAndStatus(userId, status, entityGraph);
   }
 }

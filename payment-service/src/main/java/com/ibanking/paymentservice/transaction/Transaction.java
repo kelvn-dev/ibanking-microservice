@@ -1,6 +1,7 @@
 package com.ibanking.paymentservice.transaction;
 
 import com.ibanking.paymentservice.common.BaseModel;
+import com.ibanking.paymentservice.tuition.Tuition;
 import jakarta.persistence.*;
 import java.util.UUID;
 import lombok.*;
@@ -31,4 +32,8 @@ public class Transaction extends BaseModel {
 
   @Column(name = "tuition_id", columnDefinition = "uuid", nullable = false)
   private UUID tuitionId;
+
+  @OneToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "tuition_id", insertable = false, updatable = false)
+  private Tuition tuition;
 }

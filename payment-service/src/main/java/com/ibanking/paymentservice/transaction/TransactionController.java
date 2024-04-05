@@ -1,6 +1,7 @@
 package com.ibanking.paymentservice.transaction;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,15 @@ public class TransactionController {
   public ResponseEntity<?> create(
       @RequestHeader(name = "x-user-id") String userId, @Valid @RequestBody TransactionReqDto dto) {
     Transaction transaction = transactionService.create(userId, dto);
-    return ResponseEntity.ok(transactionMapper.model2Dto(transaction));
+    return ResponseEntity.ok(transactionMapper.model2DtoIgnoreTuition(transaction));
+  }
+
+  @GetMapping
+  public ResponseEntity<?> getList(
+      @RequestHeader(name = "x-user-id") String userId,
+      @RequestParam(name = "status") TransactionStatus status) {
+    List<Transaction> transactions = transactionService.getList(userId, status);
+    return ResponseEntity.ok(transactionMapper.model2Dto(transactions));
   }
 
   @PutMapping("/{id}")
