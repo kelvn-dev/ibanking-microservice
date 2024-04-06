@@ -11,4 +11,6 @@ public class TransactionResDto {
   private String userId;
   private TransactionStatus status;
   private TuitionResDto tuition;
+  private long createdAt;
+  private long updatedAt;
 }

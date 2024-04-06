@@ -5,10 +5,7 @@ import com.ibanking.paymentservice.common.BaseModel;
 import com.ibanking.paymentservice.tuition.Tuition;
 import jakarta.persistence.*;
 import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 
 @Entity
@@ -18,6 +15,7 @@ import org.hibernate.annotations.DynamicUpdate;
 @AllArgsConstructor
 @NoArgsConstructor
 @DynamicUpdate
+@Builder
 public class Student extends BaseModel {
 
   @Column(name = "student_id")

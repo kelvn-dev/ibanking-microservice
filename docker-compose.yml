@@ -55,6 +55,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      SERVER_INIT-DATA: true
     networks:
       - ibanking-microservice
   api-gateway:

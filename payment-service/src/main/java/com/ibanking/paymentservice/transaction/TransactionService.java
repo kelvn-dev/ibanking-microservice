@@ -146,9 +146,10 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
     return transaction;
   }
 
-  public List<Transaction> getList(String userId, TransactionStatus status) {
+  public List<Transaction> getList(String userId) {
     TransactionEntityGraph entityGraph =
         TransactionEntityGraph.____().tuition().student().____.____();
-    return (List<Transaction>) repository.findAllByUserIdAndStatus(userId, status, entityGraph);
+    return (List<Transaction>)
+        repository.findAllByUserIdAndStatus(userId, TransactionStatus.COMPLETED, entityGraph);
   }
 }

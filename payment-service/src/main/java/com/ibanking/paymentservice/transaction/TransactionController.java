@@ -22,10 +22,8 @@ public class TransactionController {
   }
 
   @GetMapping
-  public ResponseEntity<?> getList(
-      @RequestHeader(name = "x-user-id") String userId,
-      @RequestParam(name = "status") TransactionStatus status) {
-    List<Transaction> transactions = transactionService.getList(userId, status);
+  public ResponseEntity<?> getList(@RequestHeader(name = "x-user-id") String userId) {
+    List<Transaction> transactions = transactionService.getList(userId);
     return ResponseEntity.ok(transactionMapper.model2Dto(transactions));
   }
 
