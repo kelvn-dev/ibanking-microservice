@@ -6,6 +6,7 @@ import com.ibanking.paymentservice.common.BaseService;
 import com.ibanking.paymentservice.exception.BadRequestException;
 import com.ibanking.paymentservice.exception.ForbiddenException;
 import com.ibanking.paymentservice.exception.NotFoundException;
+import com.ibanking.paymentservice.rabbitmq.ReceiptProcessDto;
 import com.ibanking.paymentservice.sendgrid.SendgridService;
 import com.ibanking.paymentservice.stripe.customer.CustomerService;
 import com.ibanking.paymentservice.stripe.payment.PaymentService;
@@ -19,6 +20,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +34,7 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
   private final OtpService otpService;
   private final CustomerService customerService;
   private final PaymentService paymentService;
+  private final RabbitTemplate rabbitTemplate;
 
   @Value("${server.otp-ttl}")
   private long otpTTL;
@@ -44,7 +47,8 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
       SendgridService sendgridService,
       CustomerService customerService,
       PaymentService paymentService,
-      OtpService otpService) {
+      OtpService otpService,
+      RabbitTemplate rabbitTemplate) {
     super(repository);
     this.tuitionService = tuitionService;
     this.tuitionRepository = tuitionRepository;
@@ -53,6 +57,7 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
     this.otpService = otpService;
     this.customerService = customerService;
     this.paymentService = paymentService;
+    this.rabbitTemplate = rabbitTemplate;
   }
 
   public Transaction getByIdForUpdate(UUID id) {
@@ -113,7 +118,7 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
       throw new ForbiddenException("Access denied");
     }
 
-    if (Objects.nonNull(transaction.getUpdatedAt())) {
+    if (transaction.getUpdatedAt() != 0) {
       throw new ForbiddenException("Access denied");
     }
 
@@ -147,7 +152,10 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
     // stripe
     PaymentIntent paymentIntent = paymentService.createPaymentIntent(customer, tuition);
     customerService.decreaseBalance(customer, (long) tuition.getCharges());
-    paymentService.sendReceipt(customer, paymentIntent);
+    String receiptUrl = paymentService.getReceiptUrl(paymentIntent);
+    ReceiptProcessDto receiptProcessDto =
+        ReceiptProcessDto.builder().email(customer.getEmail()).receiptUrl(receiptUrl).build();
+    rabbitTemplate.convertAndSend("x.payment", "receipt-process", receiptProcessDto);
 
     return transaction;
   }

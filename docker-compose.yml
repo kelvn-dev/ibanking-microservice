@@ -14,6 +14,20 @@ services:
       - ./volumes/db:/var/lib/postgresql/data
     networks:
       - ibanking-microservice
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ibanking-microservice-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ibanking
+      RABBITMQ_DEFAULT_PASS: ibanking
+    volumes:
+      - ./volumes/rabbitmq/data/:/var/lib/rabbitmq/
+      - ./volumes/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - ibanking-microservice
   registry-service:
     container_name: "ibanking-registry-service"
     image: kelvn/ibanking-registry-service:latest
