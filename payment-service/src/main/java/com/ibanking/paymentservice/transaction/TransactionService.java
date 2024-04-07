@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +32,9 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
   private final OtpService otpService;
   private final CustomerService customerService;
   private final PaymentService paymentService;
-  private final long otpTTL;
+
+  @Value("${server.otp-ttl}")
+  private long otpTTL;
 
   public TransactionService(
       TransactionRepository repository,
@@ -50,7 +53,6 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
     this.otpService = otpService;
     this.customerService = customerService;
     this.paymentService = paymentService;
-    this.otpTTL = 300;
   }
 
   public Transaction getByIdForUpdate(UUID id) {
