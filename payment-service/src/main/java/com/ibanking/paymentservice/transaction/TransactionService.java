@@ -113,6 +113,10 @@ public class TransactionService extends BaseService<Transaction, TransactionRepo
       throw new ForbiddenException("Access denied");
     }
 
+    if (Objects.nonNull(transaction.getUpdatedAt())) {
+      throw new ForbiddenException("Access denied");
+    }
+
     Tuition tuition = tuitionService.getByIdForUpdate(transaction.getTuitionId());
     if (tuition.isPaid()) {
       throw new BadRequestException("Tuition has been paid");
